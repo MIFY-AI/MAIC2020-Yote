@@ -12,9 +12,10 @@ class AI(Player):
 
     in_hand = 12
     score = 0
+    name = "Lol"
 
-    def __init__(self, name, color):
-        super(AI, self).__init__(name, color)
+    def __init__(self, color):
+        super(AI, self).__init__(color)
         self.position = color.value
 
     def play(self, state):

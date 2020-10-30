@@ -9,27 +9,29 @@ from PyQt5.QtWidgets import *
 from gui.panel import Panel
 from gui.board import BoardGUI
 from yote import YoteState
-# from util import Trace
+from core import Color
 from yote import YoteRules
 from yote import YoteAction
-import argparse
-import time
 from copy import deepcopy
 from utils.timer import Timer
+from utils.trace import Trace
+import argparse
+import time
+import sys
 
 
 class YoteGUI(QMainWindow):
     depth_to_cover = 9
     automatic_save_game = False
 
-    def __init__(self, shape, players, allowed_time=60.0, sleep_time=.500, first_player=-1, boring_limit=200,
+    def __init__(self, app, shape, players, allowed_time=60.0, sleep_time=.500, first_player=-1, boring_limit=200,
                  parent=None):
         super(YoteGUI, self).__init__(parent)
+        self.app = app
 
         self.saved = True
         self.board_shape = shape
         self.players = players
-        print(players)
         self.allowed_time = allowed_time
         self.sleep_time = sleep_time
         self.first_player = first_player
@@ -37,7 +39,7 @@ class YoteGUI(QMainWindow):
 
         self.setWindowTitle("[*] MAIC 2019 - Yote Game")
         self.statusBar()
-        self.setWindowIcon(QtGui.QIcon("../assets/icon.png"))
+        self.setWindowIcon(QtGui.QIcon("assets/icon.png"))
         layout = QHBoxLayout()
         layout.addStretch()
         self.board_gui = BoardGUI(self.board_shape)
@@ -58,11 +60,13 @@ class YoteGUI(QMainWindow):
         # self.random_player = AI(self.board.currentPlayer, self.board_size)
 
     def _reset(self):
+
         self.done = False
         self.rewarding_move = False
         self.board = BoardGUI(self.board_shape)
         self.state = YoteState(board=self.board.get_board_state(), next_player=self.first_player,
                                boring_limit=self.just_stop)
+        self.trace = Trace(self.state, players={-1: self.players[-1].name, 1: self.players[1].name})
         self.current_player = self.first_player
 
     def reset(self):
@@ -194,20 +198,18 @@ class YoteGUI(QMainWindow):
                 elapsed_time = timer_first_player.stop() if turn == -1 else timer_second_player.stop()
                 remain_time = timer_first_player.remain_time() if turn == -1 else timer_second_player.remain_time()
                 if self.step(action):
-                    #print('Action performed successfully by', turn, ' in', str(elapsed_time), ' rest ', remain_time)
-                    pass
+                    print('Action performed successfully by', turn, ' in', str(elapsed_time), ' rest ', remain_time)
                 else:
-                    #print("An illegal move were given. Performing a random move")
+                    print("An illegal move were given. Performing a random move")
                     print(f"Lunching a random move for {turn}, and reward is {state.rewarding_move}")
                     action = YoteRules.random_play(state, turn)  # TODO: Should we use the original state?
-                    print(self.step(action))
-                #print("Cap", self.state.captured)
+
             else:
-                #print("Not remain time for ", turn, " Performing a random move")
-                #print(f"Lunching a random move for {turn}, and reward is {state.rewarding_move}")
+                print("Not remain time for ", turn, " Performing a random move")
+                print(f"Lunching a random move for {turn}, and reward is {state.rewarding_move}")
                 action = YoteRules.random_play(state, turn)  # TODO: Should we use the original state?
-                #print(self.step(action))
             self._update_gui()
+            self.trace.add(self.state)
             self.players[turn].update_player_infos(self.get_player_info(turn))
             turn = self.state.get_next_player()
         self._results()
@@ -217,46 +219,40 @@ class YoteGUI(QMainWindow):
 
     def _update_gui(self):
         action = self.state.get_latest_move()
-        print(action, "captu",  self.state.captured)
         if self.state.previous_is_reward:
-            app.processEvents()
+            self.app.processEvents()
             if action['action_type'] == 'STEAL_FROM_BOARD':
                 at = action['action']['at']
                 self.board_gui.squares[at[0]][at[1]].set_background_color("red")
-                app.processEvents()
+                self.app.processEvents()
                 time.sleep(self.sleep_time)
                 self.board_gui.remove_piece(at)
         else:
-            app.processEvents()
+            self.app.processEvents()
             if action['action_type'] == 'ADD':
-                #app.processEvents()
+                # app.processEvents()
                 to = action['action']['to']
-                print('ADD', self.state.get_latest_player(), "to",  to)
                 self.board_gui.squares[to[0]][to[1]].set_background_color("blue")
                 self.board_gui.add_piece(to, self.state.get_latest_player())
-                app.processEvents()
+                self.app.processEvents()
             elif action['action_type'] == 'MOVE':
                 to = action['action']['to']
                 at = action['action']['at']
-                app.processEvents()
+                self.app.processEvents()
                 self.board_gui.squares[at[0]][at[1]].set_background_color("blue")
-                time.sleep(self.sleep_time/2)
+                time.sleep(self.sleep_time / 2)
                 self.board_gui.squares[to[0]][to[1]].set_background_color("green")
                 self.board_gui.move_piece(at, to, self.state.get_latest_player())
                 if self.state.captured is not None:
                     i, j = self.state.captured
-                    print("voyou")
                     self.board_gui.squares[i][j].set_background_color("red")
-                    print(self.board_gui.squares[i][j].is_piece())
-                    print(self.board_gui._board.get_board_state()[(i, j)])
-                    app.processEvents()
+                    self.app.processEvents()
                     time.sleep(self.sleep_time)
                     self.board_gui.remove_piece(self.state.captured)
-                app.processEvents()
+                self.app.processEvents()
                 time.sleep(self.sleep_time)
         self.panel.update_score(self.state.score, self.state.in_hand)
         self.board_gui.set_default_colors()
-        print("score", self.state.score)
         self.panel.update_current_player(self.state.get_next_player())
 
     def get_player_info(self, player):
@@ -267,81 +263,54 @@ class YoteGUI(QMainWindow):
 
     def _results(self):
         if self.done:
+            self.trace.done = self.done
             results = YoteRules.get_results(self.state)
-            end = QMessageBox.information(self, "End", f"{results['winner']} wins.")
+            if not results['tie']:
+                end = QMessageBox.information(self, "End", f"{self.players[results['winner']].name} wins.")
+            else:
+                end = QMessageBox.information(self, "End", "No winners.")
 
-    def loadStartBattle(self, actions, delay=0.5):
+    def load_battle(self, states, delay=0.5, done=True):
         hit = 0
-        self.board.setDefaultColors()
-        for action in actions:
-            instruction = action[1]
-            app.processEvents()
-            hit += 1
+        self.board.set_default_colors()
+        self.state = states[0]
+        for state in states[1:]:
+            action = state.get_latest_move()
+            self.state = state
+            self._update_gui()
             time.sleep(delay)
-
-            print("\n", self.players[self.board.currentPlayer].get_name(), "(Player ", self.board.currentPlayer,
-                  " plays ", instruction)
-            print(
-                f"It's the {hit}th hit played by Player {self.board.currentPlayer} ({self.players[self.board.currentPlayer].get_name()})")
-
-            self.rulesgame.play(instruction)
-            self.WhoWins()
+        self.done = done
+        self._results()
         print("It's over.")
 
     def load_game_trigger(self):
-        self.board.setDefaultColors()
-        name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Game')
-        listBoard = None
-        newnames = []
-        try:
-            listBoard = self.trace.load_trace(name[0])
-
-            self.resetForNewGame()
-            actions = listBoard.get_actions()
-            delay, ok = QInputDialog.getDouble(self, 'Enter the delay', '')
-
-            if ok:
-                try:
-                    newnames = actions[0][6]
-                except:
-                    newnames = []
-                if len(newnames) == 0:
-                    try:
-                        if (len(str(name[0]).split("/")) > 0):
-                            temp = str(name[0]).split("/")
-                            newnames = temp[len(temp) - 1].split(".")[0].split("-")
-                            # self.players[0].set_name(newnames[0])
-                            # self.players[1].set_name(newnames[1])
-                        elif (len(str(name[0]).split("\\")) > 1):
-                            temp = str(name[0]).split("\\")
-                            newnames = temp[len(temp) - 1].split(".")[0].split("-")
-                            # self.players[0].set_name(newnames[0])
-                            # self.players[1].set_name(newnames[1])
-                    except:
-                        newnames = ["IA1", "IA2"]
-
-                self.players[0].set_name(newnames[0])
-                self.players[1].set_name(newnames[1])
-                self.panel.updatePlayersName(newnames)
-                self.loadStartBattle(actions, delay)
-
-
-        except:
-            print("No file selected or File name isn't on this fomat Player1-Player2.trace")
+        self.board.set_default_colors()
+        name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Game', options=QFileDialog.DontUseNativeDialog)
+        print(name[0])
+        trace = self.trace.load(name[0])
+        print(trace.players)
+        self._reset_for_new_game()
+        actions = trace.get_actions()
+        delay, ok = QInputDialog.getDouble(self, 'Enter the delay', '')
+        players_name = trace.players
+        self.panel.update_players_name(players_name)
+        self.load_battle(actions, delay, trace.done)
 
     def save_game_trigger(self):
-        if self.gameOneGoing:
+        if self.done:
             if self.automatic_save_game:
-                self.trace.write(self.players[0].get_player_name() + "-" + self.players[1].get_player_name())
+                self.trace.write(self.players[-1].name + "-" + self.players[1].name)
             else:
-                name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Game')
-                self.trace.write(name[0])
+                name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Game', options=QFileDialog.DontUseNativeDialog)
+                if name[0] == "":
+                    pass
+                else:
+                    self.trace.write(name[0])
         else:
             warning = QMessageBox.warning(self, "Warning", "No game ongoing")
 
     def exit_game_trigger(self):
-        sys.exit(app.exec_())
-        return True
+        sys.exit(self.app.exec_())
 
     def game_rules_trigger(self):
         rules = "Yoté Rules \n " \
@@ -365,59 +334,14 @@ class YoteGUI(QMainWindow):
         else:
             a0.ignore()
 
-    def replayGame(self):
-        import time
-        self._reset_for_new_game()
-        name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Game')
-        listBoard = None
-        i = -1
-        if name[0] != "":
-            listBoard = self.trace.load_trace(name[0])
-            if listBoard.winner == -1:
-                warning = QMessageBox.warning(self, "Game Not ended",
-                                              "This game is not yet finished. Load it to finish it")
-            else:
-                self.board.resetBoard()
-                actions = listBoard.get_actions()
-
-                for action in actions:
-                    i += 1
-                    app.processEvents()
-                    if action[2] == 0:
-
-                        self.board.currentPlayer = action[0]
-
-                        self.board.putListBoard(action[3])
-                        time.sleep(self.sleep_time)
-                    elif action[2] == 1:
-                        # self.panel.updateScore(action[4])
-                        self.board.score = action[4]
-                        self.board.currentPlayer = action[0]
-
-                        self.board.putListBoard(actions[i - 1][3])
-                        origin = (action[1][0], action[1][1])
-                        end = (-1, -1)
-                        if (len(action[1]) == 4):
-                            end = (action[1][2], action[1][3])
-                        self.board.squares[origin[0]][origin[1]].setBackgroundColor("blue")
-                        time.sleep(self.sleep_time)
-                        self.board.squares[end[0]][end[1]].setBackgroundColor("green")
-                        self.rulesgame.play((action[1][0], action[1][1], action[1][2], action[1][3]))
-                        time.sleep(self.sleep_time)
-                        self.board.putListBoard(action[3])
-                        time.sleep(sleep_time)
-                        self.board.setDefaultColors()
-
-
-from core import Color
 
 if __name__ == "__main__":
     import sys
     import ctypes
 
-    myappid = 'myfi.maic.yote.1.0'
+    app_id = 'myfi.maic.yote.1.0'
     try:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     except AttributeError:
         pass
     app = QApplication(sys.argv)
@@ -431,7 +355,7 @@ if __name__ == "__main__":
 
     # set the time to play
     allowed_time = float(args.t) if args.t is not None else .1
-    sleep_time = float(args.s) if args.s is not None else 1
+    sleep_time = float(args.s) if args.s is not None else 0.
 
     player_type = ['human', 'human']
     player_type[0] = args.ai0 if args.ai0 != None else 'human'
@@ -453,7 +377,7 @@ if __name__ == "__main__":
             # extract the agent filename
             file = player_type[i][j + 1:]
             # create the agent instance
-            agents[k] = getattr(__import__(file), 'AI')(f"Dark {k}", Color(k))
+            agents[k] = getattr(__import__(file), 'AI')(Color(k))
             k *= -1
     if None in agents:
         raise Exception('Problems in  AI players instances. \n'
@@ -467,6 +391,5 @@ if __name__ == "__main__":
                         '-s sleep time \n'
                         '\t time(in second) to show the board(or move)')
     game = YoteGUI((5, 6), agents, sleep_time=sleep_time, allowed_time=allowed_time)
-    game.board_gui.squares[4][5].set_background_color("green")
     game.show()
     sys.exit(app.exec_())

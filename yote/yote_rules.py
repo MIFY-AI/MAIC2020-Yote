@@ -168,7 +168,6 @@ class YoteRules(Rule):
                 state.boring_moves += 1
                 state.in_hand[player] -= 1
                 board.fill_cell(action['action']['to'], Color(player))
-                print(board.get_board_state()[action['action']['to']], action['action']['to'])
             elif action['action_type'] == YoteActionType.MOVE:
                 at = action['action']['at']
                 to = action['action']['to']
@@ -262,7 +261,6 @@ class YoteRules(Rule):
             action : An action
         """
         import random
-        #print("Player, ", player, "Reward, ", state.rewarding_move)
         actions = YoteRules.get_player_actions(state, player, reward_move=state.rewarding_move)
         return random.choice(actions)
 
@@ -289,7 +287,7 @@ class YoteRules(Rule):
         Returns:
             bool: True if the given state is the final. False if not.
         """
-        if YoteRules.is_boring(state):
+        if YoteRules.is_boring(state) or YoteRules.is_player_stuck(state, state.get_next_player()):
             return True
         latest_player_score = state.score[state.get_latest_player()]
         if latest_player_score >= MAX_SCORE:
@@ -307,6 +305,8 @@ class YoteRules(Rule):
         """
         return state.boring_moves >= state.just_stop
 
+
+
     @staticmethod
     def get_results(state):  # TODO: Add equality case.
         """Provide the results at the end of the game.
@@ -317,5 +317,9 @@ class YoteRules(Rule):
         Returns:
             Dictionary: Containing the winner and the game score.
         """
-        return {'winner': max(state.score, key=state.score.get),
+        tie = False
+        if state.score[-1] == state.score[1]:
+            tie = True
+
+        return {'tie': tie,  'winner': max(state.score, key=state.score.get),
                 'score': state.score}

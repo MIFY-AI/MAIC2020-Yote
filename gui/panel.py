@@ -28,7 +28,7 @@ class Panel(QWidget):
         image1.setAlignment(QtCore.Qt.AlignCenter)
         image1.setFixedSize(100, 100)
         image1.setScaledContents(True)
-        image1.setPixmap(QtGui.QPixmap("../assets/profile_black.png"))
+        image1.setPixmap(QtGui.QPixmap("assets/profile_black.png"))
         horizontal2.addWidget(image1)
         horizontal2.addStretch()
         layout.addLayout(horizontal2)
@@ -67,7 +67,7 @@ class Panel(QWidget):
         image2.setAlignment(QtCore.Qt.AlignCenter)
         image2.setFixedSize(100, 100)
         image2.setScaledContents(True)
-        image2.setPixmap(QtGui.QPixmap("../assets/profile_white.png"))
+        image2.setPixmap(QtGui.QPixmap("assets/profile_white.png"))
         horizontal4.addWidget(image2)
         horizontal4.addStretch()
         layout.addLayout(horizontal4)
@@ -92,16 +92,16 @@ class Panel(QWidget):
         self.setLayout(layout)
         self.update_current_player(0)
 
-    def update_players_name(self):
-        self.name1.setTextself(self.players_name[-1])
-        self.name2.setText(self.players_name[1])
+    def update_players_name(self, players_name):
+        self.name1.setText(players_name[-1])
+        self.name2.setText(players_name[1])
 
     def set_current_player(self, player):
         pass
 
     def update_current_player(self, player):
         empty = QtGui.QPixmap(0, 0)
-        arrow = QtGui.QPixmap('../assets/arrow.png')
+        arrow = QtGui.QPixmap('assets/arrow.png')
 
         if player == 1:
             self.arrowWhite.setPixmap(arrow)
@@ -112,7 +112,7 @@ class Panel(QWidget):
 
     def reset_panel_player(self):
         empty = QtGui.QPixmap(0, 0)
-        arrow = QtGui.QPixmap('../assets/arrow.png')
+        arrow = QtGui.QPixmap('assets/arrow.png')
         self.arrowWhite.setPixmap(empty)
         self.arrowBlack.setPixmap(arrow)
 

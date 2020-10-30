@@ -8,9 +8,9 @@ class Piece:
         self.player = player
 
         if color == "green":
-            self.image_url = "../assets/CV.png"
+            self.image_url = "assets/CV.png"
         else:
-            self.image_url = "../assets/CB.png"
+            self.image_url = "assets/CB.png"
 
     def getImage(self):
         pixmap = QtGui.QPixmap()

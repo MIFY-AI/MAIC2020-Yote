@@ -16,9 +16,9 @@ class Color(Enum):
 class Player(object):
 
     reward = None
+    name = "Dark"
 
-    def __init__(self, name, color):
-        self.name = name
+    def __init__(self, color):
         self.color = color
 
     def get_name(self):
