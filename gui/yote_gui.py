@@ -154,6 +154,8 @@ class YoteGUI(QMainWindow):
         self.board.enable_all_squares()
         self.panel.reset_panel_player()
         self.board.current_player = -1
+        self.current_player = self.first_player
+        self.panel.update_current_player(self.current_player)
 
         self.state = YoteState(board=self.board.get_board_state(), next_player=self.first_player,
                                boring_limit=self.just_stop)
