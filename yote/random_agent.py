@@ -10,25 +10,11 @@ from yote.yote_rules import YoteRules
 
 class AI(Player):
 
-    in_hand = 12
-    score = 0
-    name = "Lol"
+    name = "War of Hearts"
 
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
 
     def play(self, state):
-        #print(f"Player {self.position} is playing and reward is {state.rewarding_move}")
         return YoteRules.random_play(state, self.position)
-
-    def set_score(self, new_score):
-        self.score = new_score
-
-    def update_player_infos(self, infos):
-        self.in_hand = infos['in_hand']
-        self.score = infos['score']
-
-    def reset_player_informations(self):
-        self.in_hand = 12
-        self.score = 0
