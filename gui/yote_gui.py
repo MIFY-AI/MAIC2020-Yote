@@ -214,6 +214,7 @@ class YoteGUI(QMainWindow):
             self.trace.add(self.state)
             self.players[turn].update_player_infos(self.get_player_info(turn))
             turn = self.state.get_next_player()
+        self._update_gui()
         self._results()
         self.save_game_trigger()
         self.board_gui.set_default_colors()
