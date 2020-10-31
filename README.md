@@ -49,7 +49,7 @@ Firstly, just clone this repository or download the zip to get everything you ne
 **Example:**
 
         git clone https://github.com/Machine-Intelligence-For-You/MAIC2019.git
-        cd MAIC2019/
+        cd MAIC2020-Yote/
         python main.py -ai0 ai_0.py -ai1 ai_1.py -s 0.5
 
 
