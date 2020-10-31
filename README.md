@@ -5,9 +5,7 @@ Third edition of the Mify Artificial Intelligence Contest #MIFY #AAAIBenin
 
 ## The Game
 
-The game chosen for this edition is Yote. It is played by 2 players on a board generally either 6 squares out of 5 or 5
-squares out of 5. Each player has 12 pieces of different colours. The aim of the game is to capture all the opponent 
-pieces. More information on the competition and the rules of the game is available [here](https://maic.mify-ai.com/maic2019).
+One of the chosen game for this edition is Yote.  Informations on the competition and the rules of the game is available [here](https://maic.mify-ai.com/maic2019).
 
 ## Setup
 
@@ -16,7 +14,7 @@ The game was implemented in **Python** and works with versions greater than or e
 ### Get Python and dependencies
 
 
-You can download the **3.8** version of Python [here](https://www.python.org/downloads/).
+You can download the **3.6+** version of Python [here](https://www.python.org/downloads/).
 (Don't forget to add python to the path if you are on Windows)
 
 Next, install the dependencies for the game. For that just run the following command (Note that you may replace *pip* by *pip3* if you have different versions of python).
