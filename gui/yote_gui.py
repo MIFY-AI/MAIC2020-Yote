@@ -233,6 +233,7 @@ class YoteGUI(QMainWindow):
         else:
             self.app.processEvents()
             if action['action_type'] == 'ADD':
+                print(action)
                 # app.processEvents()
                 to = action['action']['to']
                 self.board_gui.squares[to[0]][to[1]].set_background_color("blue")
@@ -241,11 +242,12 @@ class YoteGUI(QMainWindow):
             elif action['action_type'] == 'MOVE':
                 to = action['action']['to']
                 at = action['action']['at']
-                self.app.processEvents()
                 self.board_gui.squares[at[0]][at[1]].set_background_color("blue")
-                time.sleep(self.sleep_time / 2)
+                self.app.processEvents()
+                time.sleep(self.sleep_time *2)
                 self.board_gui.squares[to[0]][to[1]].set_background_color("green")
                 self.board_gui.move_piece(at, to, self.state.get_latest_player())
+
                 if self.state.captured is not None:
                     i, j = self.state.captured
                     self.board_gui.squares[i][j].set_background_color("red")
