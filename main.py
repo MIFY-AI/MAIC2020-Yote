@@ -28,7 +28,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # set the time to play
-    allowed_time = float(args.t) if args.t is not None else .1
+    allowed_time = float(args.t) if args.t is not None else 120.0
     sleep_time = float(args.s) if args.s is not None else 0.
 
     player_type = ['human', 'human']

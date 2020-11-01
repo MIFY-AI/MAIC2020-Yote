@@ -24,7 +24,7 @@ class YoteGUI(QMainWindow):
     depth_to_cover = 9
     automatic_save_game = False
 
-    def __init__(self, app, shape, players, allowed_time=60.0, sleep_time=.500, first_player=-1, boring_limit=200,
+    def __init__(self, app, shape, players, allowed_time=120.0, sleep_time=.500, first_player=-1, boring_limit=200,
                  parent=None):
         super(YoteGUI, self).__init__(parent)
         self.app = app
@@ -186,17 +186,18 @@ class YoteGUI(QMainWindow):
     def play_game(self):
         hit = 0
 
-        timer_first_player = Timer("first_player", total_time=0.1, logger=None)
-        timer_second_player = Timer("second_player", total_time=0.1, logger=None)
+        timer_first_player = Timer("first_player", total_time=self.allowed_time, logger=None)
+        timer_second_player = Timer("second_player", total_time=self.allowed_time, logger=None)
         turn = self.first_player
         while not self.done:
             hit += 1
             time.sleep(self.sleep_time)
             state = deepcopy(self.state)
             remain_time = timer_first_player.remain_time() if turn == -1 else timer_second_player.remain_time()
+            remain_time_copy = deepcopy(remain_time)
             if remain_time > 0:
                 timer_first_player.start() if turn == -1 else timer_second_player.start()
-                action = self.players[turn].play(state)
+                action = self.players[turn].play(state, remain_time_copy)
                 elapsed_time = timer_first_player.stop() if turn == -1 else timer_second_player.stop()
                 remain_time = timer_first_player.remain_time() if turn == -1 else timer_second_player.remain_time()
                 if self.step(action):
@@ -244,7 +245,7 @@ class YoteGUI(QMainWindow):
                 at = action['action']['at']
                 self.board_gui.squares[at[0]][at[1]].set_background_color("blue")
                 self.app.processEvents()
-                time.sleep(self.sleep_time *2)
+                time.sleep(self.sleep_time)
                 self.board_gui.squares[to[0]][to[1]].set_background_color("green")
                 self.board_gui.move_piece(at, to, self.state.get_latest_player())
 

@@ -262,7 +262,8 @@ class YoteRules(Rule):
         """
         import random
         actions = YoteRules.get_player_actions(state, player, reward_move=state.rewarding_move)
-        return random.choice(actions)
+        choice = random.choice(actions)
+        return choice
 
     @staticmethod
     def is_player_stuck(state, player):  # WARNING: Note used yet

@@ -16,5 +16,6 @@ class AI(Player):
         super(AI, self).__init__(color)
         self.position = color.value
 
-    def play(self, state):
+    def play(self, state, remain_time):
+        print("time remain is ", remain_time, " seconds")
         return YoteRules.random_play(state, self.position)
